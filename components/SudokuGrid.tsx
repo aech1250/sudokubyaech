@@ -3,13 +3,23 @@
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type SudokuGrid = number[][];
 type NumberToEnter = undefined | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
-const SudokuGrid = ({ solution: solutionGrid, puzzle }) => {
-  const [puzzleGrid, setPuzzleGrid] = useState(puzzle);
+type SudokuGridProps = {
+  solution: number[][];
+  puzzle: number[][];
+};
+
+const SudokuGrid: React.FC<SudokuGridProps> = ({
+  solution: solutionGrid,
+  puzzle,
+}) => {
+  // Only one state for the current grid
+  const [puzzleGrid, setPuzzleGrid] = useState<SudokuGrid>(puzzle);
+  const [numberToEnter, setNumberToEnter] = useState<NumberToEnter>(undefined);
 
   const gridMap = {
     "0,0": [0, 0],
@@ -97,24 +107,24 @@ const SudokuGrid = ({ solution: solutionGrid, puzzle }) => {
 
   const getMappedPuzzleGridValue = (i, j) => {
     const [destRow, destCol] = gridMap[`${i},${j}`];
-    return sudokuGrid[destRow][destCol];
+    return puzzleGrid[destRow][destCol];
   };
 
-  const setPuzzleGridValue = (newValue, i, j) => {
+  const setPuzzleGridValue = (newValue: number, i: number, j: number) => {
     const [destRow, destCol] = gridMap[`${i},${j}`];
-    setPuzzleGrid((prev) =>
-      prev.map((row, i) =>
-        i === destRow
-          ? row.map((cell, j) => (j === destCol ? newValue : cell))
-          : row
-      )
+    const newGrid = puzzleGrid.map((row, rowIdx) =>
+      rowIdx === destRow
+        ? row.map((cell, colIdx) => (colIdx === destCol ? newValue : cell))
+        : row
     );
+    setPuzzleGrid(newGrid);
   };
+
+  const isGridEmpty = (grid: number[][]) =>
+    grid.every((row) => row.every((cell) => cell === 0));
 
   const getMappedSolutionGridValue = (i, j) => {
     const [destRow, destCol] = gridMap[`${i},${j}`];
-    console.log(`SolutionGrid Mapping: ${i},${j}: [${destRow}, ${destCol}]`);
-    console.log(`SolutionGrid Value: ${solutionGrid[destRow][destCol]}`);
     return solutionGrid[destRow][destCol];
   };
 
@@ -124,24 +134,14 @@ const SudokuGrid = ({ solution: solutionGrid, puzzle }) => {
     );
   }
 
-  const [sudokuGrid, setSudokuGrid] = useState<SudokuGrid>(puzzleGrid);
-  const [numberToEnter, setNumberToEnter] = useState<NumberToEnter>(undefined);
-  const [selectedCell, setSelectedCell] = useState<{
-    row: number;
-    col: number;
-  } | null>(null);
-
-  useEffect(() => {
-    if (gridsAreEqual(solutionGrid, puzzleGrid)) {
-      console.log("You Won!");
-    }
-  }, [puzzleGrid, solutionGrid]);
-
   return (
     <div className="flex flex-row">
       <div className="flex flex-col mr-2">
         <div className="flex flex-col mb-3.25 place-items-center">
-          <div className="grid w-12.5 h-12.5 bg-secondary hover:bg-secondary/75 rounded-full">
+          <div
+            className="grid w-12.5 h-12.5 bg-secondary hover:bg-secondary/75 rounded-full"
+            style={{ cursor: "pointer" }}
+          >
             <Image
               src={`/undo-light.svg`}
               alt="Gamepad Icon"
@@ -153,7 +153,10 @@ const SudokuGrid = ({ solution: solutionGrid, puzzle }) => {
           <Label className="mt-0.5 font-sans text-foreground">Undo</Label>
         </div>
         <div className="flex flex-col mb-3.25 place-items-center">
-          <div className="grid w-12.5 h-12.5 bg-secondary hover:bg-secondary/75 rounded-full">
+          <div
+            className="grid w-12.5 h-12.5 bg-secondary hover:bg-secondary/75 rounded-full"
+            style={{ cursor: "pointer" }}
+          >
             <Image
               src={`/erase-light.svg`}
               alt="Gamepad Icon"
@@ -165,7 +168,10 @@ const SudokuGrid = ({ solution: solutionGrid, puzzle }) => {
           <Label className="mt-0.5 font-sans text-foreground">Erase</Label>
         </div>
         <div className="flex flex-col place-items-center">
-          <div className="grid w-12.5 h-12.5 bg-secondary hover:bg-secondary/75 rounded-full">
+          <div
+            className="grid w-12.5 h-12.5 bg-secondary hover:bg-secondary/75 rounded-full"
+            style={{ cursor: "pointer" }}
+          >
             <Image
               src={`/hint-light.svg`}
               alt="Gamepad Icon"
@@ -185,37 +191,15 @@ const SudokuGrid = ({ solution: solutionGrid, puzzle }) => {
               className="m-0 p-0 grid grid-cols-3 grid-rows-3 border-1 border-foreground gap-x-0 gap-y-0"
             >
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((_, j) => {
-                const [destRow, destCol] = gridMap[`${i},${j}`];
-                const cellValue = sudokuGrid[destRow][destCol];
-                const isEditable = puzzle[destRow][destCol] === 0;
-                const isSameRow = selectedCell && destRow === selectedCell.row;
-                const isSameCol = selectedCell && destCol === selectedCell.col;
-                const isSameSubgrid =
-                  selectedCell &&
-                  Math.floor(destRow / 3) ===
-                    Math.floor(selectedCell.row / 3) &&
-                  Math.floor(destCol / 3) === Math.floor(selectedCell.col / 3);
-
-                let cellClass =
-                  "m-0 p-0 border-1 border-foreground h-10 w-10.25 font-inter text-2xl/0 text-center leading-none pt-1.5 ";
-                if (isSameRow || isSameCol || isSameSubgrid)
-                  cellClass += " bg-primary/15"; // highlight row/col/subgrid
-                if (cellValue === numberToEnter)
-                  cellClass += "bg-primary text-white"; // highlight same value
-
                 return (
                   <div
                     key={j}
-                    className={cellClass}
-                    onClick={(e) => {
-                      if (isEditable) {
-                        setSelectedCell({ row: destRow, col: destCol });
-                      }
-                      setPuzzleGridValue(numberToEnter, i, j);
-                      e.target.innerHTML = numberToEnter;
-                    }}
+                    className={`m-0 p-0 border-1 border-foreground h-10 w-10.25 font-inter text-2xl/0 text-center leading-none pt-1.5`}
+                    onClick={() => {}}
                   >
-                    {cellValue === 0 ? " " : cellValue}
+                    {getMappedPuzzleGridValue(i, j) === 0
+                      ? " "
+                      : getMappedPuzzleGridValue(i, j)}
                   </div>
                 );
               })}
@@ -231,7 +215,9 @@ const SudokuGrid = ({ solution: solutionGrid, puzzle }) => {
                   ? "bg-primary text-background"
                   : "bg-secondary text-foreground"
               } hover:bg-primary hover:text-background rounded-lg font-inter text-2xl/0 leading-none pt-1`}
-              onClick={() => setNumberToEnter(num)}
+              onClick={() =>
+                setNumberToEnter(numberToEnter === num ? undefined : num)
+              }
             >
               {num}
             </Button>
