@@ -3,47 +3,32 @@
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import Image from "next/image";
-import { SetStateAction, useEffect, useState } from "react";
+import { SetStateAction, useState } from "react";
 import { gridMap } from "@/lib/classicMethods";
 
-type SudokuGrid = number[][];
-
 type SudokuGridProps = {
-  solution: number[][];
-  puzzle: number[][];
-  score: number;
-  setScore: SetStateAction<any>;
-  setMistakes: SetStateAction<any>;
+  puzzleGrid: number[][];
+  setPuzzleGrid: SetStateAction<T>;
+  disable: boolean;
 };
 
 type UndoMove = {
   ri: number;
   ci: number;
-  prevScore: number;
   prevValue: number;
   newValue: number;
 };
 
-const SudokuGrid: React.FC<SudokuGridProps> = ({
-  solution: solutionGrid,
-  puzzle,
-  score,
-  setScore,
-  setMistakes,
+const SudokuGridForSolver: React.FC<SudokuGridProps> = ({
+  puzzleGrid,
+  setPuzzleGrid,
+  disable,
 }) => {
-  const initialPuzzleGrid = puzzle;
-  const [puzzleGrid, setPuzzleGrid] = useState<SudokuGrid>(puzzle);
-
-  useEffect(() => {
-    setPuzzleGrid(puzzle);
-  }, [puzzle]);
-
   const [selectedCell, setSelectedCell] = useState<[number, number] | null>(
     null
   );
   const [selectedDiv, setSelectedDiv] = useState<HTMLDivElement | null>(null);
   const [undoHistory, setUndoHistory] = useState<UndoMove[]>([]);
-  const [showScore, setShowScore] = useState<boolean>(false);
 
   const setPuzzleGridValue = (newValue: number, ri: number, ci: number) => {
     const newGrid = puzzleGrid.map((row, rowIdx) =>
@@ -56,12 +41,10 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
 
   const recordMove = (num: number, ri: number, ci: number) => {
     const prevValue = puzzleGrid[ri][ci];
-    const prevScore = score;
     if (prevValue !== num) {
       const move: UndoMove = {
         ri: ri,
         ci: ci,
-        prevScore: prevScore,
         prevValue: prevValue,
         newValue: num,
       };
@@ -72,25 +55,9 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
   const handleNumberInput = (num: number) => {
     if (selectedCell) {
       const [ri, ci] = selectedCell;
-      if (
-        document.getElementsByClassName(`[${ri}][${ci}]`)[0].id ===
-          "uneditable" &&
-        puzzleGrid[ri][ci] === 0
-      ) {
-        document.getElementsByClassName(`[${ri}][${ci}]`)[0].id = "editable";
-      }
       if (selectedDiv && selectedDiv.id === "editable") {
         recordMove(num, ri, ci);
         setPuzzleGridValue(num, ri, ci);
-        if (solutionGrid[ri][ci] === num) {
-          document.getElementsByClassName(`[${ri}][${ci}]`)[0].id =
-            "uneditable";
-          setShowScore(true);
-          setScore((prev: number) => prev + 120);
-          setTimeout(() => {
-            setShowScore(false);
-          }, 1000);
-        }
       }
     }
   };
@@ -129,18 +96,11 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
     return "bg-background";
   }
 
-  const handleMistakes = () => {
-    const currentMistakes =
-      document.getElementsByClassName("!text-red-600").length;
-    setMistakes(currentMistakes);
-  };
-
   const handleUndo = () => {
     if (undoHistory.length > 0) {
       const lastMove = undoHistory[undoHistory.length - 1];
       setPuzzleGridValue(lastMove.prevValue, lastMove.ri, lastMove.ci);
       setUndoHistory((prev) => prev.slice(0, -1));
-      setScore(lastMove.prevScore);
       setSelectedCell([lastMove.ri, lastMove.ci]);
       const prevDiv = document.getElementsByClassName(
         `[${lastMove.ri}][${lastMove.ci}]`
@@ -156,24 +116,19 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
     }
   };
 
-  const handleHint = () => {
-    if (selectedCell && selectedDiv && selectedDiv?.id === "editable") {
-      recordMove(
-        solutionGrid[selectedCell[0]][selectedCell[1]],
-        selectedCell[0],
-        selectedCell[1]
-      );
-      setPuzzleGridValue(
-        solutionGrid[selectedCell[0]][selectedCell[1]],
-        selectedCell[0],
-        selectedCell[1]
-      );
-    }
+  const handleClearAll = () => {
+    setPuzzleGrid([
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ]);
   };
-
-  useEffect(() => {
-    handleMistakes();
-  }, [puzzleGrid]);
 
   return (
     <div className="flex flex-row">
@@ -214,17 +169,17 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
           <div
             className="grid w-12.5 h-12.5 bg-secondary hover:bg-secondary/75 rounded-full"
             style={{ cursor: "pointer" }}
-            onClick={handleHint}
+            onClick={handleClearAll}
           >
             <Image
-              src={`/hint-light.svg`}
-              alt="Hint Icon"
+              src={`/clear-light.svg`}
+              alt="Clear Icon"
               width={24}
               height={24}
               className="!w-7.5 !h-7.5 place-self-center"
             ></Image>
           </div>
-          <Label className="mt-0.5 font-sans text-foreground">Hint</Label>
+          <Label className="mt-0.5 font-sans text-foreground">Clear All</Label>
         </div>
       </div>
       <div className="flex flex-col">
@@ -236,19 +191,12 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
             >
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((_, j) => {
                 const [ri, ci] = gridMap[`${i},${j}`];
-                const isEditable = initialPuzzleGrid[ri][ci] === 0;
-                const isMistake =
-                  puzzleGrid[ri][ci] !== 0 &&
-                  solutionGrid[ri][ci] !== puzzleGrid[ri][ci];
-                const isSelected =
-                  selectedCell?.[0] === ri && selectedCell?.[1] === ci;
                 return (
                   <div
-                    id={isEditable ? "editable" : "uneditable"}
+                    id={"editable"}
                     key={`[${ri}][${ci}]`}
                     className={`[${ri}][${ci}] relative m-0 p-0 border-1 border-foreground h-10 w-10.25 font-inter text-2xl/0 text-center leading-none pt-1.5 
-                      ${handleHighlight(ri, ci)} 
-                      ${isEditable && isMistake ? " !text-red-600 " : ""} `}
+                      ${handleHighlight(ri, ci)} `}
                     onClick={(e) => {
                       const cell: [number, number] = [ri, ci];
                       const div = e.currentTarget;
@@ -268,11 +216,6 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
                     }}
                   >
                     {puzzleGrid[ri][ci] === 0 ? " " : puzzleGrid[ri][ci]}
-                    {showScore && isSelected && (
-                      <span className="absolute -top-5 left-[.10rem] bg-secondary px-1 py-0.5 rounded-xl flex items-center justify-center pointer-events-none animate-pulse text-xs text-primary font-sans">
-                        +120
-                      </span>
-                    )}
                   </div>
                 );
               })}
@@ -286,6 +229,7 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
                 key={num}
                 className={`h-10.75 w-8.25 bg-secondary text-foreground hover:bg-primary hover:text-background rounded-lg font-inter text-2xl/0 leading-none pt-1`}
                 onClick={() => handleNumberInput(num)}
+                disabled={disable}
               >
                 {num}
               </Button>
@@ -297,4 +241,4 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
   );
 };
 
-export default SudokuGrid;
+export default SudokuGridForSolver;
