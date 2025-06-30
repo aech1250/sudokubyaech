@@ -149,6 +149,15 @@
   --chart-5: oklch(0.645 0.246 16.439);
 }
 
+@layer components {
+  .scoreStyle {
+    @apply absolute -top-5 left-[.10rem] px-1 py-1 flex items-center justify-center bg-white rounded-xl pointer-events-none font-sans text-xs text-primary text-center leading-none opacity-0;
+  }
+  .cellText {
+    @apply inline-block origin-center;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

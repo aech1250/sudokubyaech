@@ -3,12 +3,12 @@
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import Image from "next/image";
-import { SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { gridMap } from "@/lib/classicMethods";
 
 type SudokuGridProps = {
   puzzleGrid: number[][];
-  setPuzzleGrid: SetStateAction<T>;
+  setPuzzleGrid: Dispatch<SetStateAction<number[][]>>;
   disable: boolean;
 };
 

@@ -3,8 +3,10 @@
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import Image from "next/image";
-import { SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState, useRef } from "react";
 import { gridMap } from "@/lib/classicMethods";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 
 type SudokuGrid = number[][];
 
@@ -12,8 +14,8 @@ type SudokuGridProps = {
   solution: number[][];
   puzzle: number[][];
   score: number;
-  setScore: SetStateAction<any>;
-  setMistakes: SetStateAction<any>;
+  setScore: Dispatch<SetStateAction<number>>;
+  setMistakes: Dispatch<SetStateAction<0 | 1 | 2 | 3>>;
 };
 
 type UndoMove = {
@@ -43,7 +45,319 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
   );
   const [selectedDiv, setSelectedDiv] = useState<HTMLDivElement | null>(null);
   const [undoHistory, setUndoHistory] = useState<UndoMove[]>([]);
-  const [showScore, setShowScore] = useState<boolean>(false);
+  const [showScore, setShowScore] = useState<boolean>(true);
+
+  const scoreRef = useRef<HTMLSpanElement>(null);
+
+  useGSAP(() => {
+    if (showScore && scoreRef.current) {
+      gsap.fromTo(
+        scoreRef.current,
+        { opacity: 1 },
+        { opacity: 0, y: -10, duration: 1, ease: "power1" }
+      );
+    }
+  }, [showScore, selectedCell]);
+
+  const animatedRowNeighbours = (row: number, col: number) => {
+    const cells = Array.from(document.querySelectorAll(`[data-row="${row}"]`));
+
+    cells.sort(
+      (a, b) =>
+        Number(a.getAttribute("data-col")) - Number(b.getAttribute("data-col"))
+    );
+
+    const leftCells: HTMLDivElement[] = [];
+    const rightCells: HTMLDivElement[] = [];
+    for (let offset = 1; offset < 9; offset++) {
+      const left = cells.find(
+        (cell) => Number(cell.getAttribute("data-col")) === col - offset
+      );
+      const right = cells.find(
+        (cell) => Number(cell.getAttribute("data-col")) === col + offset
+      );
+      if (left) leftCells.push(left as HTMLDivElement);
+      if (right) rightCells.push(right as HTMLDivElement);
+    }
+
+    const maxPairs = Math.max(leftCells.length, rightCells.length);
+    for (let i = 0; i < maxPairs; i++) {
+      setTimeout(() => {
+        const pair: HTMLDivElement[] = [];
+        if (leftCells[i]) pair.push(leftCells[i]);
+        if (rightCells[i]) pair.push(rightCells[i]);
+        if (pair.length > 0) {
+          const originalBgs = pair.map(
+            (cell) => window.getComputedStyle(cell).backgroundColor
+          );
+          const origninalClr = pair.map(
+            (cell) => window.getComputedStyle(cell).color
+          );
+
+          const tl = gsap.timeline({
+            onComplete: () => {
+              gsap.set(pair, { clearProps: "all" });
+            },
+          });
+
+          tl.to(pair, {
+            scale: 0.6,
+            borderRadius: "25%",
+            backgroundColor: "var(--primary)",
+            color: "var(--background)",
+            duration: 0.4,
+            ease: "power1.inOut",
+            onUpdate: function () {
+              pair.forEach((cell) => {
+                const text = cell.querySelector(".cellText");
+                if (text) {
+                  const parentScale = gsap.getProperty(cell, "scale") as number;
+                  gsap.set(text, { scale: 1 / (parentScale || 1) });
+                }
+              });
+            },
+          });
+          tl.to(pair, {
+            scale: 1,
+            borderRadius: "0%",
+            backgroundColor: originalBgs,
+            color: origninalClr,
+            duration: 0.4,
+            ease: "power1.inOut",
+            onUpdate: function () {
+              pair.forEach((cell) => {
+                const text = cell.querySelector(".cellText");
+                if (text) {
+                  gsap.set(text, { scale: 1 });
+                }
+              });
+            },
+          });
+        }
+      }, i * 120);
+    }
+  };
+
+  const animatedColNeighbours = (row: number, col: number) => {
+    const cells = Array.from(document.querySelectorAll(`[data-col="${col}"]`));
+    cells.sort(
+      (a, b) =>
+        Number(a.getAttribute("data-row")) - Number(b.getAttribute("data-row"))
+    );
+
+    const upperCells: HTMLDivElement[] = [];
+    const lowerCells: HTMLDivElement[] = [];
+    for (let offset = 1; offset < 9; offset++) {
+      const upper = cells.find(
+        (cell) => Number(cell.getAttribute("data-row")) === row - offset
+      );
+      const lower = cells.find(
+        (cell) => Number(cell.getAttribute("data-row")) === row + offset
+      );
+      if (upper) upperCells.push(upper as HTMLDivElement);
+      if (lower) lowerCells.push(lower as HTMLDivElement);
+    }
+    const maxPairs = Math.max(upperCells.length, lowerCells.length);
+    for (let i = 0; i < maxPairs; i++) {
+      setTimeout(() => {
+        const pair: HTMLDivElement[] = [];
+        if (upperCells[i]) pair.push(upperCells[i]);
+        if (lowerCells[i]) pair.push(lowerCells[i]);
+        if (pair.length > 0) {
+          const originalBgs = pair.map(
+            (cell) => window.getComputedStyle(cell).backgroundColor
+          );
+          const origninalClr = pair.map(
+            (cell) => window.getComputedStyle(cell).color
+          );
+
+          const tl = gsap.timeline({
+            onComplete: () => {
+              gsap.set(pair, { clearProps: "all" });
+            },
+          });
+
+          tl.to(pair, {
+            scale: 0.6,
+            borderRadius: "25%",
+            backgroundColor: "var(--primary)",
+            color: "var(--background)",
+            duration: 0.4,
+            ease: "power1.inOut",
+            onUpdate: function () {
+              pair.forEach((cell) => {
+                const text = cell.querySelector(".cellText");
+                if (text) {
+                  const parentScale = gsap.getProperty(cell, "scale") as number;
+                  gsap.set(text, { scale: 1 / (parentScale || 1) });
+                }
+              });
+            },
+          });
+          tl.to(pair, {
+            scale: 1,
+            borderRadius: "0%",
+            backgroundColor: originalBgs,
+            color: origninalClr,
+            duration: 0.4,
+            ease: "power1.inOut",
+            onUpdate: function () {
+              pair.forEach((cell) => {
+                const text = cell.querySelector(".cellText");
+                if (text) {
+                  gsap.set(text, { scale: 1 });
+                }
+              });
+            },
+          });
+        }
+      }, i * 120);
+    }
+  };
+
+  const animateSubgridNeighbours = (row: number, col: number) => {
+    const subgridRow = Math.floor(row / 3) * 3;
+    const subgridCol = Math.floor(col / 3) * 3;
+
+    const cells: HTMLDivElement[] = [];
+    for (let r = subgridRow; r < subgridRow + 3; r++) {
+      for (let c = subgridCol; c < subgridCol + 3; c++) {
+        if (r === row && c === col) continue;
+        const cell = document.querySelector(
+          `[data-row="${r}"][data-col="${c}"]`
+        );
+        if (cell) cells.push(cell as HTMLDivElement);
+      }
+    }
+
+    cells.sort((a, b) => {
+      const ar = Number(a.getAttribute("data-row"));
+      const ac = Number(a.getAttribute("data-col"));
+      const br = Number(b.getAttribute("data-row"));
+      const bc = Number(b.getAttribute("data-col"));
+      const da = Math.abs(ar - row) + Math.abs(ac - col);
+      const db = Math.abs(br - row) + Math.abs(bc - col);
+      return da - db;
+    });
+
+    for (let dist = 1; dist <= 4; dist++) {
+      const waveCells = cells.filter((cell) => {
+        const r = Number(cell.getAttribute("data-row"));
+        const c = Number(cell.getAttribute("data-col"));
+        return Math.abs(r - row) + Math.abs(c - col) === dist;
+      });
+      if (waveCells.length > 0) {
+        setTimeout(() => {
+          const originalBgs = waveCells.map(
+            (cell) => window.getComputedStyle(cell).backgroundColor
+          );
+          const originalClr = waveCells.map(
+            (cell) => window.getComputedStyle(cell).color
+          );
+          const tl = gsap.timeline({
+            onComplete: () => {
+              gsap.set(waveCells, { clearProps: "all" });
+            },
+          });
+          tl.to(waveCells, {
+            scale: 0.6,
+            borderRadius: "25%",
+            backgroundColor: "var(--primary)",
+            color: "var(--background)",
+            duration: 0.4,
+            ease: "power1.inOut",
+            onUpdate: function () {
+              waveCells.forEach((cell) => {
+                const text = cell.querySelector(".cellText");
+                if (text) {
+                  const parentScale = gsap.getProperty(cell, "scale") as number;
+                  gsap.set(text, { scale: 1 / (parentScale || 1) });
+                }
+              });
+            },
+          });
+          tl.to(waveCells, {
+            scale: 1,
+            borderRadius: "0%",
+            backgroundColor: originalBgs,
+            color: originalClr,
+            duration: 0.4,
+            ease: "power1.inOut",
+            onUpdate: function () {
+              waveCells.forEach((cell) => {
+                const text = cell.querySelector(".cellText");
+                if (text) {
+                  gsap.set(text, { scale: 1 });
+                }
+              });
+            },
+          });
+        }, dist * 120);
+      }
+    }
+  };
+
+  const animateEntireGrid = (row: number, col: number) => {
+    const cells: HTMLDivElement[] = Array.from(
+      document.querySelectorAll(".cell")
+    );
+
+    for (let dist = 1; dist <= 16; dist++) {
+      const waveCells = cells.filter((cell) => {
+        const r = Number(cell.getAttribute("data-row"));
+        const c = Number(cell.getAttribute("data-col"));
+        return Math.abs(r - row) + Math.abs(c - col) === dist;
+      });
+      if (waveCells.length > 0) {
+        setTimeout(() => {
+          const originalBgs = waveCells.map(
+            (cell) => window.getComputedStyle(cell).backgroundColor
+          );
+          const originalClr = waveCells.map(
+            (cell) => window.getComputedStyle(cell).color
+          );
+          const tl = gsap.timeline({
+            onComplete: () => {
+              gsap.set(waveCells, { clearProps: "all" });
+            },
+          });
+          tl.to(waveCells, {
+            scale: 0.6,
+            borderRadius: "25%",
+            backgroundColor: "var(--primary)",
+            color: "var(--background)",
+            duration: 0.4,
+            ease: "power1.inOut",
+            onUpdate: function () {
+              waveCells.forEach((cell) => {
+                const text = cell.querySelector(".cellText");
+                if (text) {
+                  const parentScale = gsap.getProperty(cell, "scale") as number;
+                  gsap.set(text, { scale: 1 / (parentScale || 1) });
+                }
+              });
+            },
+          });
+          tl.to(waveCells, {
+            scale: 1,
+            borderRadius: "0%",
+            backgroundColor: originalBgs,
+            color: originalClr,
+            duration: 0.4,
+            ease: "power1.inOut",
+            onUpdate: function () {
+              waveCells.forEach((cell) => {
+                const text = cell.querySelector(".cellText");
+                if (text) {
+                  gsap.set(text, { scale: 1 });
+                }
+              });
+            },
+          });
+        }, dist * 120);
+      }
+    }
+  };
 
   const setPuzzleGridValue = (newValue: number, ri: number, ci: number) => {
     const newGrid = puzzleGrid.map((row, rowIdx) =>
@@ -72,6 +386,13 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
   const handleNumberInput = (num: number) => {
     if (selectedCell) {
       const [ri, ci] = selectedCell;
+
+      const newGrid = puzzleGrid.map((row, rowIdx) =>
+        rowIdx === ri
+          ? row.map((cell, colIdx) => (colIdx === ci ? num : cell))
+          : row
+      );
+
       if (
         document.getElementsByClassName(`[${ri}][${ci}]`)[0].id ===
           "uneditable" &&
@@ -83,10 +404,37 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
         recordMove(num, ri, ci);
         setPuzzleGridValue(num, ri, ci);
         if (solutionGrid[ri][ci] === num) {
+          const isRowComplete = newGrid[ri].every((cell) => cell !== 0);
+          const isColComplete = newGrid.every((row) => row[ci] !== 0);
+          const startRow = Math.floor(ri / 3) * 3;
+          const startCol = Math.floor(ci / 3) * 3;
+          const isSubgridComplete = [0, 1, 2].every((r) =>
+            [0, 1, 2].every((c) => newGrid[startRow + r][startCol + c] !== 0)
+          );
+          const isPuzzleComplete = newGrid.every((row) =>
+            row.every((cell) => cell !== 0)
+          );
+          console.log("isRowComplete: ", isRowComplete);
+          console.log("isColComplete: ", isColComplete);
+          console.log("isSubgridComplete: ", isSubgridComplete);
           document.getElementsByClassName(`[${ri}][${ci}]`)[0].id =
             "uneditable";
           setShowScore(true);
           setScore((prev: number) => prev + 120);
+
+          if (isPuzzleComplete) {
+            animateEntireGrid(ri, ci);
+          } else {
+            if (isRowComplete) {
+              animatedRowNeighbours(ri, ci);
+            }
+            if (isColComplete) {
+              animatedColNeighbours(ri, ci);
+            }
+            if (isSubgridComplete) {
+              animateSubgridNeighbours(ri, ci);
+            }
+          }
           setTimeout(() => {
             setShowScore(false);
           }, 1000);
@@ -132,7 +480,7 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
   const handleMistakes = () => {
     const currentMistakes =
       document.getElementsByClassName("!text-red-600").length;
-    setMistakes(currentMistakes);
+    setMistakes(currentMistakes as 0 | 1 | 2 | 3);
   };
 
   const handleUndo = () => {
@@ -245,8 +593,10 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
                 return (
                   <div
                     id={isEditable ? "editable" : "uneditable"}
+                    data-row={ri}
+                    data-col={ci}
                     key={`[${ri}][${ci}]`}
-                    className={`[${ri}][${ci}] relative m-0 p-0 border-1 border-foreground h-10 w-10.25 font-inter text-2xl/0 text-center leading-none pt-1.5 
+                    className={`[${ri}][${ci}] cell relative m-0 p-0 border-1 border-foreground h-10 w-10.25 font-inter text-2xl/0 text-center leading-none pt-1.5 
                       ${handleHighlight(ri, ci)} 
                       ${isEditable && isMistake ? " !text-red-600 " : ""} `}
                     onClick={(e) => {
@@ -267,12 +617,15 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
                       }
                     }}
                   >
-                    {puzzleGrid[ri][ci] === 0 ? " " : puzzleGrid[ri][ci]}
-                    {showScore && isSelected && (
-                      <span className="absolute -top-5 left-[.10rem] bg-secondary px-1 py-0.5 rounded-xl flex items-center justify-center pointer-events-none animate-pulse text-xs text-primary font-sans">
-                        +120
-                      </span>
-                    )}
+                    {" "}
+                    <span className="cellText">
+                      {puzzleGrid[ri][ci] === 0 ? " " : puzzleGrid[ri][ci]}
+                      {showScore && isSelected && (
+                        <span ref={scoreRef} className="score scoreStyle">
+                          +120
+                        </span>
+                      )}
+                    </span>
                   </div>
                 );
               })}

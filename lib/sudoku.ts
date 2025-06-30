@@ -1,4 +1,4 @@
-export function createSudokuGrid(level) {
+export function createSudokuGrid(level: string) {
   if (level === "None") {
     return {
       completeGrid: [
@@ -31,7 +31,7 @@ export function createSudokuGrid(level) {
     .fill(null)
     .map(() => Array(size).fill(0));
 
-  function makePuzzle(board) {
+  function makePuzzle(board: number[][]) {
     let cellsToRemove = 0;
     if (level === "Easy") {
       cellsToRemove = 10;
@@ -60,7 +60,7 @@ export function createSudokuGrid(level) {
   return { completeGrid, board };
 }
 
-function shuffle(array) {
+function shuffle(array: number[]) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [array[i], array[j]] = [array[j], array[i]];
@@ -68,7 +68,7 @@ function shuffle(array) {
   return array;
 }
 
-export function solve(board, size) {
+export function solve(board: number[][], size: number) {
   const emptyCells = [];
   for (let row = 0; row < size; row++) {
     for (let col = 0; col < size; col++) {
@@ -84,8 +84,8 @@ export function solve(board, size) {
 
     const numbersToTry = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
-    let lastTriedNum = board[row][col];
-    let startIndex =
+    const lastTriedNum = board[row][col];
+    const startIndex =
       lastTriedNum === 0 ? 0 : numbersToTry.indexOf(lastTriedNum) + 1;
 
     let foundValidNumber = false;
@@ -109,7 +109,12 @@ export function solve(board, size) {
   return i === emptyCells.length;
 }
 
-export function isValidPlacement(grid, row, col, num) {
+export function isValidPlacement(
+  grid: number[][],
+  row: number,
+  col: number,
+  num: number
+) {
   for (let i = 0; i < 9; i++) {
     if (grid[row][i] === num || grid[i][col] === num) {
       return false;

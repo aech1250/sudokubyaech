@@ -1,4 +1,4 @@
-export const gridMap = {
+export const gridMap: Record<`${number},${number}`, [number, number]> = {
   "0,0": [0, 0],
   "0,1": [0, 1],
   "0,2": [0, 2],
