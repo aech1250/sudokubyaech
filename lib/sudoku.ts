@@ -34,7 +34,7 @@ export function createSudokuGrid(level: string) {
   function makePuzzle(board: number[][]) {
     let cellsToRemove = 0;
     if (level === "Easy") {
-      cellsToRemove = 10;
+      cellsToRemove = 33;
     } else if (level === "Medium") {
       cellsToRemove = 43;
     } else if (level === "Hard") {

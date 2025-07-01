@@ -9,6 +9,7 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
 type SudokuGrid = number[][];
+type Level = "Expert" | "Hard" | "Medium" | "Easy" | "None";
 
 type SudokuGridProps = {
   solution: number[][];
@@ -16,6 +17,8 @@ type SudokuGridProps = {
   score: number;
   setScore: Dispatch<SetStateAction<number>>;
   setMistakes: Dispatch<SetStateAction<0 | 1 | 2 | 3>>;
+  setIsComplete: Dispatch<SetStateAction<boolean | null>>;
+  level: Level;
 };
 
 type UndoMove = {
@@ -32,6 +35,8 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
   score,
   setScore,
   setMistakes,
+  setIsComplete,
+  level,
 }) => {
   const initialPuzzleGrid = puzzle;
   const [puzzleGrid, setPuzzleGrid] = useState<SudokuGrid>(puzzle);
@@ -45,7 +50,8 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
   );
   const [selectedDiv, setSelectedDiv] = useState<HTMLDivElement | null>(null);
   const [undoHistory, setUndoHistory] = useState<UndoMove[]>([]);
-  const [showScore, setShowScore] = useState<boolean>(true);
+  const [showScore, setShowScore] = useState<boolean>(false);
+  const [isPuzzleComplete, setIsPuzzleComplete] = useState<boolean>(false);
 
   const scoreRef = useRef<HTMLSpanElement>(null);
 
@@ -319,6 +325,7 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
           const tl = gsap.timeline({
             onComplete: () => {
               gsap.set(waveCells, { clearProps: "all" });
+              gsap.delayedCall(2, () => setIsComplete(true));
             },
           });
           tl.to(waveCells, {
@@ -411,18 +418,30 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
           const isSubgridComplete = [0, 1, 2].every((r) =>
             [0, 1, 2].every((c) => newGrid[startRow + r][startCol + c] !== 0)
           );
-          const isPuzzleComplete = newGrid.every((row) =>
+          const isPuzzleDone = newGrid.every((row) =>
             row.every((cell) => cell !== 0)
           );
+          if (isPuzzleDone) {
+            setIsPuzzleComplete(isPuzzleDone);
+          }
           console.log("isRowComplete: ", isRowComplete);
           console.log("isColComplete: ", isColComplete);
           console.log("isSubgridComplete: ", isSubgridComplete);
           document.getElementsByClassName(`[${ri}][${ci}]`)[0].id =
             "uneditable";
           setShowScore(true);
-          setScore((prev: number) => prev + 120);
 
-          if (isPuzzleComplete) {
+          if (level === "Easy") {
+            setScore((prev: number) => prev + 120);
+          } else if (level === "Medium") {
+            setScore((prev: number) => prev + 240);
+          } else if (level === "Hard") {
+            setScore((prev: number) => prev + 360);
+          } else if (level === "Expert") {
+            setScore((prev: number) => prev + 480);
+          }
+
+          if (isPuzzleDone) {
             animateEntireGrid(ri, ci);
           } else {
             if (isRowComplete) {
@@ -453,7 +472,7 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
     const isCellSelected = ri === selectedRi && ci === selectedCi;
 
     if (isCellSelected) {
-      return "bg-primary text-background";
+      return "bg-primary !text-background";
     }
 
     const selectedValue = puzzleGrid[selectedRi][selectedCi];
@@ -597,6 +616,13 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
                     data-col={ci}
                     key={`[${ri}][${ci}]`}
                     className={`[${ri}][${ci}] cell relative m-0 p-0 border-1 border-foreground h-10 w-10.25 font-inter text-2xl/0 text-center leading-none pt-1.5 
+                      ${
+                        isEditable
+                          ? " text-primary "
+                          : isSelected
+                          ? "text-background"
+                          : "text-foreground"
+                      }
                       ${handleHighlight(ri, ci)} 
                       ${isEditable && isMistake ? " !text-red-600 " : ""} `}
                     onClick={(e) => {
@@ -622,7 +648,15 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
                       {puzzleGrid[ri][ci] === 0 ? " " : puzzleGrid[ri][ci]}
                       {showScore && isSelected && (
                         <span ref={scoreRef} className="score scoreStyle">
-                          +120
+                          {level === "Easy"
+                            ? "+120"
+                            : level === "Medium"
+                            ? "+240"
+                            : level === "Hard"
+                            ? "+360"
+                            : level === "Expert"
+                            ? "+480"
+                            : ""}
                         </span>
                       )}
                     </span>

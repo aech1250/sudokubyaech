@@ -47,6 +47,7 @@ const AppSidebar = () => {
           height={59}
           width={236}
           className="p-0 mx-6 mt-6"
+          priority
         />
       </SidebarHeader>
       <SidebarContent className="mt-1.75">
@@ -119,7 +120,7 @@ const AppSidebar = () => {
                   width={24}
                   height={24}
                   className="ml-2 mr-2.5 !w-8.25 !h-7"
-                  unoptimized
+                  priority
                 />
                 <span
                   className={`font-display text-2xl ${

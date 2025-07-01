@@ -158,6 +158,35 @@
   }
 }
 
+@layer utilities {
+  @keyframes sunburst-spin {
+    0% {
+      transform: rotate(0turn);
+    }
+    50% {
+      transform: rotate(0.5turn);
+    }
+    100% {
+      transform: rotate(1turn);
+    }
+  }
+
+  .sunburst {
+    background-image: radial-gradient(
+        circle at 25% 50%,
+        rgba(255, 255, 255, 0.1) 0%,
+        rgba(255, 255, 255, 0) 70%
+      ),
+      repeating-conic-gradient(
+        rgba(255, 255, 255, 0.22) 0deg 6deg,
+        rgba(255, 255, 255, 0.04) 6deg 12deg
+      );
+    background-size: cover;
+    animation: sunburst-spin 16s linear infinite;
+    scale: 2;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
