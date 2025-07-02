@@ -7,6 +7,7 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { solve } from "@/lib/sudoku";
 import { Toaster, toast } from "sonner";
+import gsap from "gsap";
 
 type SudokuGrid = number[][];
 
@@ -56,6 +57,60 @@ const Solver = () => {
     toast.promise(
       promise.then((payload) => {
         setPuzzleGrid(board);
+        const tl = gsap.timeline();
+        tl.fromTo(
+          ".solverGrid",
+          { opacity: 0, scale: 0 },
+          { opacity: 1, scale: 1, duration: 1, ease: "power1.inOut" }
+        );
+        tl.fromTo(
+          ".clear",
+          { x: 1, y: -157.5, opacity: 0, scale: 0 },
+          {
+            x: 1,
+            y: 1,
+            opacity: 1,
+            scale: 1,
+            duration: 0.3,
+            ease: "power1.inOut",
+          }
+        );
+        tl.fromTo(
+          ".erase",
+          { x: 1, y: -78, opacity: 0, scale: 0 },
+          {
+            x: 1,
+            y: 1,
+            opacity: 1,
+            scale: 1,
+            duration: 0.3,
+            ease: "power1.inOut",
+          }
+        );
+        tl.fromTo(
+          ".undo",
+          { x: 1, y: 1, opacity: 0, scale: 0 },
+          {
+            x: 1,
+            y: 1,
+            opacity: 1,
+            scale: 1,
+            duration: 0.3,
+            ease: "power1.inOut",
+          }
+        );
+        tl.fromTo(
+          ".numbersBar",
+          { x: 1, y: 1, opacity: 0, scale: 0 },
+          {
+            x: 1,
+            y: 1,
+            opacity: 1,
+            scale: 1,
+            duration: 0.3,
+            ease: "power1.inOut",
+          }
+        );
         return payload;
       }),
       {
@@ -67,10 +122,10 @@ const Solver = () => {
   };
 
   return (
-    <div className="w-full h-screen grid place-items-center">
+    <div className="w-full h-screen">
       <Toaster richColors expand position="bottom-right"></Toaster>
-      <div>
-        <h1 className="flex flex-row content-center mb-5.5 h-10 w-full font-sans bg-secondary rounded text-[1.05rem]">
+      <div className={"ml-37.75 pt-11.75"}>
+        <h1 className="flex flex-row content-center mb-5.5 h-10 w-189 font-sans bg-secondary rounded text-[1.05rem]">
           <Image
             src={"/info-light.svg"}
             alt="Info Icon"
@@ -88,7 +143,7 @@ const Solver = () => {
             </Link>
           </span>
         </h1>
-        <div className="flex flex-row">
+        <div className="solver flex flex-row">
           <SudokuGridForSolver
             puzzleGrid={puzzleGrid}
             setPuzzleGrid={setPuzzleGrid}

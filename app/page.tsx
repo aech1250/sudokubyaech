@@ -14,6 +14,7 @@ export default function Home() {
     "Expert" | "Hard" | "Medium" | "Easy" | "None"
   >("None");
   const [mistakes, setMistakes] = useState<0 | 1 | 2 | 3>(0);
+  const [hints, setHints] = useState<0 | 1 | 2 | 3>(0);
   const [score, setScore] = useState<number>(0);
   const [time, setTime] = useState<number>(0);
   const [timeObj, setTimeObj] = useState<{
@@ -24,10 +25,22 @@ export default function Home() {
   const [playMenuOpen, setPlayMenuOpen] = useState<boolean>(false);
   const [re_render, setRe_Render] = useState<number>(0);
   const [isComplete, setIsComplete] = useState<boolean | null>(null);
+  const [isLose, setIsLose] = useState<boolean>();
+  const [currentPuzzleGrid, setCurrentPuzzleGrid] = useState<SudokuGrid>([
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+  ]);
 
-  const { completeGrid: solutionGrid, board: puzzleGrid } = useMemo(
+  const { completeGrid: solutionGrid, board: globalPuzzleGrid } = useMemo(
     () => createSudokuGrid(level),
-    [level, re_render]
+    [re_render]
   );
 
   useGSAP(() => {
@@ -65,6 +78,13 @@ export default function Home() {
     }
   }, [time]);
 
+  useEffect(() => {
+    if (mistakes === 3) {
+      setIsComplete(true);
+      setIsLose(true);
+    }
+  }, [mistakes]);
+
   return (
     <div className="w-full h-screen grid place-items-center">
       <div>
@@ -78,15 +98,23 @@ export default function Home() {
           )}
         </h1>
         {isComplete ? (
-          <div className="victoryScreen h-[435px] w-[754px] bg-primary rounded-2xl relative">
+          <div
+            className={`victoryScreen h-[435px] w-[754px] ${
+              isLose ? "bg-red-700" : "bg-primary"
+            } rounded-2xl relative`}
+          >
             <div className="flex items-center justify-center h-full w-full relative overflow-hidden ">
               <div className="relative flex items-center justify-center h-full w-1/2">
                 <div className="absolute inset-0 sunburst mix-blend-overlay pointer-events-none [mask-image:radial-gradient(circle,white_0%,transparent_80%)]"></div>
-                <MiniGrid solutionGrid={solutionGrid} puzzleGrid={puzzleGrid} />
+                <MiniGrid
+                  globalPuzzleGrid={globalPuzzleGrid}
+                  solutionGrid={solutionGrid}
+                  puzzleGrid={currentPuzzleGrid}
+                />
               </div>
               <div className="flex flex-col">
                 <span className="mb-15 self-center font-sans font-bold text-white text-3xl">
-                  Victory
+                  {isLose ? "You Lose!" : "Victory"}
                 </span>
                 <div>
                   <span></span>
@@ -124,6 +152,8 @@ export default function Home() {
                   setScore={setScore}
                   setTime={setTime}
                   setTimeObj={setTimeObj}
+                  setHints={setHints}
+                  setMistakes={setMistakes}
                 />
               </div>
             </div>
@@ -132,12 +162,16 @@ export default function Home() {
           <div className="game flex flex-row">
             <SudokuGrid
               solution={solutionGrid}
-              puzzle={puzzleGrid}
+              puzzle={globalPuzzleGrid}
               score={score}
               setScore={setScore}
               setMistakes={setMistakes}
               setIsComplete={setIsComplete}
               level={level}
+              hints={hints}
+              setHints={setHints}
+              mistakes={mistakes}
+              setCurrentPuzzleGrid={setCurrentPuzzleGrid}
             ></SudokuGrid>
             <div className="pl-10.75">
               <div className="flex flex-row justify-center text-center">
@@ -178,6 +212,8 @@ export default function Home() {
                 setScore={setScore}
                 setTime={setTime}
                 setTimeObj={setTimeObj}
+                setHints={setHints}
+                setMistakes={setMistakes}
               />
             </div>
           </div>

@@ -6,6 +6,8 @@ import Image from "next/image";
 
 type Level = "Expert" | "Hard" | "Medium" | "Easy" | "None";
 type TimeOjb = { hour: number; minute: number; second: number };
+type Hints = 0 | 1 | 2 | 3;
+type Mistakes = 0 | 1 | 2 | 3;
 
 type PlayGameProps = {
   playMenuOpen: boolean;
@@ -17,6 +19,8 @@ type PlayGameProps = {
   setScore: Dispatch<SetStateAction<number>>;
   setTime: Dispatch<SetStateAction<number>>;
   setTimeObj: Dispatch<SetStateAction<TimeOjb>>;
+  setHints: Dispatch<SetStateAction<Hints>>;
+  setMistakes: Dispatch<SetStateAction<Mistakes>>;
 };
 
 const PlayGame = ({
@@ -29,6 +33,8 @@ const PlayGame = ({
   setScore,
   setTime,
   setTimeObj,
+  setHints,
+  setMistakes,
 }: PlayGameProps) => {
   const handleMenuItemClick = (level: Level) => {
     setLevel(level);
@@ -37,6 +43,8 @@ const PlayGame = ({
     setIsComplete(false);
     setScore(0);
     setTime(0);
+    setHints(3);
+    setMistakes(0);
     setTimeObj({ hour: 0, minute: 0, second: 0 });
   };
 

@@ -21,6 +21,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import React, { useState } from "react";
+import { Settings, useSettings } from "@/app/contexts/settings";
 
 const navItems = [
   { name: "Classic", icon: "gamepad", href: "/" },
@@ -33,6 +34,7 @@ const AppSidebar = () => {
   const [hovered, setHovered] = useState<string | null>(null);
   const [settingHovered, setSettingHovered] = useState<boolean>(false);
   const [openSettings, setOpenSettings] = useState<boolean>(false);
+  const { settings, setSettings } = useSettings();
 
   return (
     <Sidebar
@@ -136,25 +138,54 @@ const AppSidebar = () => {
             <PopoverContent
               side="right"
               align="end"
-              className="flex flex-col gap-3 ml-2 px-4 pt-3 h-37.5 w-45 font-sans text-base border-2 rounded-2xl bg-secondary border-black shadow-lg"
+              className="flex flex-col gap-3 ml-2 px-4 pt-3 h-30.25 w-45 font-sans text-base border-2 rounded-2xl bg-secondary border-black shadow-lg"
             >
               <div className="flex flex-row items-center">
                 <Label htmlFor="lightening-mode">Lightening Mode</Label>
-                <Switch id="lightening-mode" className="ml-auto " />
-              </div>
-              <div className="flex flex-row items-center">
-                <Label htmlFor="auto-complete">Auto-Complete</Label>
-                <Switch id="auto-complete" className="ml-auto " />
+                <Switch
+                  id="lightening-mode"
+                  className="ml-auto "
+                  checked={settings.lighteningMode}
+                  onCheckedChange={() => {
+                    setSettings(
+                      (prev: Settings) =>
+                        ({
+                          ...prev,
+                          lighteningMode: !prev.lighteningMode,
+                        } as Settings)
+                    );
+                  }}
+                />
               </div>
               <div className="flex flex-row items-center">
                 <Label htmlFor="highlight-peers">Highlight Peers</Label>
-                <Switch id="highlight-peers" className="ml-auto " />
+                <Switch
+                  id="highlight-peers"
+                  className="ml-auto "
+                  checked={settings.highlightPeers}
+                  onCheckedChange={() => {
+                    setSettings((prev: Settings) => ({
+                      ...prev,
+                      highlightPeers: !prev.highlightPeers,
+                    }));
+                  }}
+                />
               </div>
               <div className="flex flex-row items-center">
                 <Label htmlFor="highlight-same-number">
                   Highlight Same Number
                 </Label>
-                <Switch id="highlight-same-number" className="ml-auto " />
+                <Switch
+                  id="highlight-same-number"
+                  className="ml-auto "
+                  checked={settings.highlightSameNumber}
+                  onCheckedChange={() => {
+                    setSettings((prev: Settings) => ({
+                      ...prev,
+                      highlightSameNumber: !prev.highlightSameNumber,
+                    }));
+                  }}
+                />
               </div>
             </PopoverContent>
           </Popover>

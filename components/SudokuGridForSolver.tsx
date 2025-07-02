@@ -117,6 +117,9 @@ const SudokuGridForSolver: React.FC<SudokuGridProps> = ({
   };
 
   const handleClearAll = () => {
+    setSelectedCell(null);
+    setSelectedDiv(null);
+    setUndoHistory([]);
     setPuzzleGrid([
       [0, 0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -133,7 +136,7 @@ const SudokuGridForSolver: React.FC<SudokuGridProps> = ({
   return (
     <div className="flex flex-row">
       <div className="flex flex-col mr-2">
-        <div className="flex flex-col mb-3.25 place-items-center">
+        <div className="undo flex flex-col mb-3.25 place-items-center">
           <div
             className="grid w-12.5 h-12.5 bg-secondary hover:bg-secondary/75 rounded-full"
             style={{ cursor: "pointer" }}
@@ -149,7 +152,7 @@ const SudokuGridForSolver: React.FC<SudokuGridProps> = ({
           </div>
           <Label className="mt-0.5 font-sans text-foreground">Undo</Label>
         </div>
-        <div className="flex flex-col mb-3.25 place-items-center">
+        <div className="erase flex flex-col mb-3.25 place-items-center">
           <div
             className="grid w-12.5 h-12.5 bg-secondary hover:bg-secondary/75 rounded-full"
             style={{ cursor: "pointer" }}
@@ -165,7 +168,7 @@ const SudokuGridForSolver: React.FC<SudokuGridProps> = ({
           </div>
           <Label className="mt-0.5 font-sans text-foreground">Erase</Label>
         </div>
-        <div className="flex flex-col place-items-center">
+        <div className="clear flex flex-col place-items-center">
           <div
             className="grid w-12.5 h-12.5 bg-secondary hover:bg-secondary/75 rounded-full"
             style={{ cursor: "pointer" }}
@@ -183,7 +186,7 @@ const SudokuGridForSolver: React.FC<SudokuGridProps> = ({
         </div>
       </div>
       <div className="flex flex-col">
-        <div className="m-0 p-0 grid grid-cols-3 grid-rows-3 border-2 border-foreground gap-0">
+        <div className="solverGrid m-0 p-0 grid grid-cols-3 grid-rows-3 border-2 border-foreground gap-0">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((_, i) => (
             <div
               key={i}
@@ -222,7 +225,7 @@ const SudokuGridForSolver: React.FC<SudokuGridProps> = ({
             </div>
           ))}
         </div>
-        <div className="flex flex-row mt-5.5 gap-2.5">
+        <div className="numbersBar flex flex-row mt-5.5 gap-2.5">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => {
             return (
               <Button

@@ -7,18 +7,25 @@ import { Dispatch, SetStateAction, useEffect, useState, useRef } from "react";
 import { gridMap } from "@/lib/classicMethods";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { useSettings } from "@/app/contexts/settings";
 
 type SudokuGrid = number[][];
 type Level = "Expert" | "Hard" | "Medium" | "Easy" | "None";
+type Hints = 0 | 1 | 2 | 3;
+type Mistakes = 0 | 1 | 2 | 3;
 
 type SudokuGridProps = {
   solution: number[][];
   puzzle: number[][];
   score: number;
   setScore: Dispatch<SetStateAction<number>>;
-  setMistakes: Dispatch<SetStateAction<0 | 1 | 2 | 3>>;
+  setMistakes: Dispatch<SetStateAction<Mistakes>>;
   setIsComplete: Dispatch<SetStateAction<boolean | null>>;
   level: Level;
+  hints: Hints;
+  mistakes: Mistakes;
+  setHints: Dispatch<SetStateAction<Hints>>;
+  setCurrentPuzzleGrid: Dispatch<SetStateAction<SudokuGrid>>;
 };
 
 type UndoMove = {
@@ -37,6 +44,9 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
   setMistakes,
   setIsComplete,
   level,
+  hints,
+  setHints,
+  setCurrentPuzzleGrid,
 }) => {
   const initialPuzzleGrid = puzzle;
   const [puzzleGrid, setPuzzleGrid] = useState<SudokuGrid>(puzzle);
@@ -51,9 +61,10 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
   const [selectedDiv, setSelectedDiv] = useState<HTMLDivElement | null>(null);
   const [undoHistory, setUndoHistory] = useState<UndoMove[]>([]);
   const [showScore, setShowScore] = useState<boolean>(false);
-  const [isPuzzleComplete, setIsPuzzleComplete] = useState<boolean>(false);
+  const [numberToEnter, setNumberToEnter] = useState<number | null>(null);
 
   const scoreRef = useRef<HTMLSpanElement>(null);
+  const { settings } = useSettings();
 
   useGSAP(() => {
     if (showScore && scoreRef.current) {
@@ -64,6 +75,26 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
       );
     }
   }, [showScore, selectedCell]);
+
+  useEffect(() => {
+    setPuzzleGrid(puzzle);
+    setCurrentPuzzleGrid(puzzle);
+  }, [puzzle]);
+
+  useEffect(() => {
+    if (!settings.lighteningMode) {
+      setNumberToEnter(null);
+    } else {
+      if (numberToEnter === null) {
+        for (let i = 1; i < 10; i++) {
+          if (9 - puzzleGrid.flat().filter((cell) => cell === i).length > 0) {
+            setNumberToEnter(i);
+            break;
+          }
+        }
+      }
+    }
+  }, [puzzleGrid]);
 
   const animatedRowNeighbours = (row: number, col: number) => {
     const cells = Array.from(document.querySelectorAll(`[data-row="${row}"]`));
@@ -325,7 +356,9 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
           const tl = gsap.timeline({
             onComplete: () => {
               gsap.set(waveCells, { clearProps: "all" });
-              gsap.delayedCall(2, () => setIsComplete(true));
+              gsap.delayedCall(5, () => {
+                setIsComplete(true);
+              });
             },
           });
           tl.to(waveCells, {
@@ -373,6 +406,7 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
         : row
     );
     setPuzzleGrid(newGrid);
+    setCurrentPuzzleGrid(newGrid); // Add this line to update the parent state
   };
 
   const recordMove = (num: number, ri: number, ci: number) => {
@@ -390,10 +424,14 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
     }
   };
 
-  const handleNumberInput = (num: number) => {
-    if (selectedCell) {
-      const [ri, ci] = selectedCell;
-
+  const handleNumberInput = (
+    num: number,
+    cell: number[],
+    div: HTMLDivElement,
+    ri: number,
+    ci: number
+  ) => {
+    if (cell) {
       const newGrid = puzzleGrid.map((row, rowIdx) =>
         rowIdx === ri
           ? row.map((cell, colIdx) => (colIdx === ci ? num : cell))
@@ -407,9 +445,11 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
       ) {
         document.getElementsByClassName(`[${ri}][${ci}]`)[0].id = "editable";
       }
-      if (selectedDiv && selectedDiv.id === "editable") {
+
+      if (div && div.id === "editable") {
         recordMove(num, ri, ci);
         setPuzzleGridValue(num, ri, ci);
+
         if (solutionGrid[ri][ci] === num) {
           const isRowComplete = newGrid[ri].every((cell) => cell !== 0);
           const isColComplete = newGrid.every((row) => row[ci] !== 0);
@@ -421,12 +461,6 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
           const isPuzzleDone = newGrid.every((row) =>
             row.every((cell) => cell !== 0)
           );
-          if (isPuzzleDone) {
-            setIsPuzzleComplete(isPuzzleDone);
-          }
-          console.log("isRowComplete: ", isRowComplete);
-          console.log("isColComplete: ", isColComplete);
-          console.log("isSubgridComplete: ", isSubgridComplete);
           document.getElementsByClassName(`[${ri}][${ci}]`)[0].id =
             "uneditable";
           setShowScore(true);
@@ -440,6 +474,8 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
           } else if (level === "Expert") {
             setScore((prev: number) => prev + 480);
           }
+
+          setGlobalPuzzleGrid(newGrid);
 
           if (isPuzzleDone) {
             animateEntireGrid(ri, ci);
@@ -457,50 +493,79 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
           setTimeout(() => {
             setShowScore(false);
           }, 1000);
+
+          if (settings.lighteningMode) {
+            const isNumberComplete =
+              newGrid.flat().filter((cellVal) => cellVal === num).length === 9;
+
+            if (isNumberComplete) {
+              for (let i = 1; i <= 9; i++) {
+                if (
+                  newGrid.flat().filter((cellVal) => cellVal === i).length < 9
+                ) {
+                  setSelectedCell(null);
+                  setNumberToEnter(i);
+                  break;
+                }
+              }
+            } else {
+              setNumberToEnter(num);
+            }
+          }
+        } else {
+          setMistakes((prev) => (prev + 1) as Mistakes);
+          setNumberToEnter(num);
         }
       }
     }
   };
 
   function handleHighlight(ri: number, ci: number): string {
-    if (!selectedCell) {
-      return "bg-background";
+    if (selectedCell) {
+      const [selectedRi, selectedCi] = selectedCell;
+      if (ri === selectedRi && ci === selectedCi) {
+        return "bg-primary !text-background";
+      }
     }
 
-    const [selectedRi, selectedCi] = selectedCell;
-
-    const isCellSelected = ri === selectedRi && ci === selectedCi;
-
-    if (isCellSelected) {
-      return "bg-primary !text-background";
-    }
-
-    const selectedValue = puzzleGrid[selectedRi][selectedCi];
-    const hasSameValue =
-      selectedValue !== 0 && puzzleGrid[ri][ci] === selectedValue;
-
-    if (hasSameValue) {
+    if (
+      settings.lighteningMode &&
+      numberToEnter !== null &&
+      puzzleGrid[ri][ci] === numberToEnter &&
+      puzzleGrid[ri][ci] !== 0
+    ) {
       return "bg-primary/60 text-secondary";
     }
 
-    const isInSameRow = ri === selectedRi;
-    const isInSameCol = ci === selectedCi;
-    const isInSameSubgrid =
-      Math.floor(ri / 3) === Math.floor(selectedRi / 3) &&
-      Math.floor(ci / 3) === Math.floor(selectedCi / 3);
+    if (selectedCell) {
+      const [selectedRi, selectedCi] = selectedCell;
 
-    if (isInSameRow || isInSameCol || isInSameSubgrid) {
-      return "bg-slate-300";
+      const selectedNumber = puzzleGrid[selectedRi][selectedCi];
+      if (
+        !settings.lighteningMode &&
+        settings.highlightSameNumber &&
+        selectedNumber !== 0 &&
+        puzzleGrid[ri][ci] === selectedNumber
+      ) {
+        return "bg-primary/60 text-secondary";
+      }
+
+      const isInSameRow = ri === selectedRi;
+      const isInSameCol = ci === selectedCi;
+      const isInSameSubgrid =
+        Math.floor(ri / 3) === Math.floor(selectedRi / 3) &&
+        Math.floor(ci / 3) === Math.floor(selectedCi / 3);
+
+      if (
+        (isInSameRow || isInSameCol || isInSameSubgrid) &&
+        settings.highlightPeers
+      ) {
+        return "bg-slate-300";
+      }
     }
 
     return "bg-background";
   }
-
-  const handleMistakes = () => {
-    const currentMistakes =
-      document.getElementsByClassName("!text-red-600").length;
-    setMistakes(currentMistakes as 0 | 1 | 2 | 3);
-  };
 
   const handleUndo = () => {
     if (undoHistory.length > 0) {
@@ -524,27 +589,26 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
   };
 
   const handleHint = () => {
-    if (selectedCell && selectedDiv && selectedDiv?.id === "editable") {
-      recordMove(
-        solutionGrid[selectedCell[0]][selectedCell[1]],
-        selectedCell[0],
-        selectedCell[1]
-      );
-      setPuzzleGridValue(
-        solutionGrid[selectedCell[0]][selectedCell[1]],
-        selectedCell[0],
-        selectedCell[1]
-      );
+    if (hints > 0) {
+      if (selectedCell && selectedDiv && selectedDiv?.id === "editable") {
+        recordMove(
+          solutionGrid[selectedCell[0]][selectedCell[1]],
+          selectedCell[0],
+          selectedCell[1]
+        );
+        setPuzzleGridValue(
+          solutionGrid[selectedCell[0]][selectedCell[1]],
+          selectedCell[0],
+          selectedCell[1]
+        );
+      }
+      setHints((prev: Hints) => (prev - 1) as Hints);
     }
   };
 
-  useEffect(() => {
-    handleMistakes();
-  }, [puzzleGrid]);
-
   return (
     <div className="flex flex-row">
-      <div className="flex flex-col mr-2">
+      <div className="flex flex-col mr-2.75">
         <div className="flex flex-col mb-3.25 place-items-center">
           <div
             className="grid w-12.5 h-12.5 bg-secondary hover:bg-secondary/75 rounded-full"
@@ -577,7 +641,14 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
           </div>
           <Label className="mt-0.5 font-sans text-foreground">Erase</Label>
         </div>
-        <div className="flex flex-col place-items-center">
+        <div className="relative flex flex-col place-items-center">
+          {level !== "None" ? (
+            <div className="absolute -top-1.5 left-8.5 h-5 w-5 rounded-full bg-primary font-sans text-xs text-background text-center leading-none pt-1">
+              {hints}
+            </div>
+          ) : (
+            ""
+          )}
           <div
             className="grid w-12.5 h-12.5 bg-secondary hover:bg-secondary/75 rounded-full"
             style={{ cursor: "pointer" }}
@@ -626,20 +697,40 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
                       ${handleHighlight(ri, ci)} 
                       ${isEditable && isMistake ? " !text-red-600 " : ""} `}
                     onClick={(e) => {
-                      const cell: [number, number] = [ri, ci];
-                      const div = e.currentTarget;
+                      if (level !== "None") {
+                        const cell: [number, number] = [ri, ci];
+                        const div = e.currentTarget;
 
-                      const isCurrentlySelected =
-                        selectedCell &&
-                        selectedCell[0] === cell[0] &&
-                        selectedCell[1] === cell[1];
+                        const isCurrentlySelected =
+                          selectedCell &&
+                          selectedCell[0] === cell[0] &&
+                          selectedCell[1] === cell[1];
 
-                      if (isCurrentlySelected) {
-                        setSelectedCell(null);
-                        setSelectedDiv(null);
-                      } else {
-                        setSelectedCell(cell);
-                        setSelectedDiv(div);
+                        if (isCurrentlySelected) {
+                          setSelectedCell(null);
+                          setSelectedDiv(null);
+                        } else {
+                          setSelectedCell(cell);
+                          setSelectedDiv(div);
+                        }
+
+                        if (settings.lighteningMode) {
+                          setNumberToEnter(puzzleGrid[ri][ci]);
+                        }
+
+                        if (
+                          settings.lighteningMode &&
+                          numberToEnter !== null &&
+                          isEditable
+                        ) {
+                          console.log("Cell: ", cell);
+                          console.log("Div: ", div);
+                          console.log(
+                            "input click. numberToEnter given: ",
+                            numberToEnter
+                          );
+                          handleNumberInput(numberToEnter, cell, div, ri, ci);
+                        }
                       }
                     }}
                   >
@@ -668,13 +759,43 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
         </div>
         <div className="flex flex-row mt-5.5 gap-2.5">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => {
+            const remaining =
+              9 - puzzleGrid.flat().filter((cell) => cell === num).length;
+
             return (
               <Button
                 key={num}
-                className={`h-10.75 w-8.25 bg-secondary text-foreground hover:bg-primary hover:text-background rounded-lg font-inter text-2xl/0 leading-none pt-1`}
-                onClick={() => handleNumberInput(num)}
+                className={`flex flex-col gap-0 h-10.75 w-8.25 ${
+                  settings.lighteningMode &&
+                  numberToEnter !== null &&
+                  num === numberToEnter
+                    ? "bg-primary text-background [&>span]:text-foreground"
+                    : "bg-secondary text-foreground"
+                }  hover:bg-primary hover:text-background hover:[&>span]:text-foreground rounded-lg font-inter text-2xl/0 leading-none pt-1.5`}
+                onClick={() => {
+                  if (!settings.lighteningMode && selectedCell && selectedDiv) {
+                    handleNumberInput(
+                      num,
+                      selectedCell,
+                      selectedDiv,
+                      selectedCell?.[0],
+                      selectedCell?.[1]
+                    );
+                  } else {
+                    setSelectedCell(null);
+                    setNumberToEnter(num);
+                  }
+                }}
+                disabled={level === "None" || remaining === 0}
               >
                 {num}
+                {level !== "None" ? (
+                  <span className="font-sans text-xs text-primary pt-0.1">
+                    {remaining !== 0 ? remaining : ""}
+                  </span>
+                ) : (
+                  ""
+                )}
               </Button>
             );
           })}
