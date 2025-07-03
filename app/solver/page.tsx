@@ -122,7 +122,7 @@ const Solver = () => {
   };
 
   return (
-    <div className="w-full h-screen grid place-items-center [&>section]:hidden">
+    <div className="relative w-full h-screen grid place-items-center [&>section]:absolute [&>section]:inset-0 [&>section]:pointer-events-none [&>section]:z-50 ">
       <div className={"solverPage opacity-0"}>
         <h1 className="flex flex-row content-center mb-5.5 h-10 w-189 font-sans bg-secondary rounded text-[1.05rem]">
           <Image
@@ -157,12 +157,7 @@ const Solver = () => {
           </Button>
         </div>
       </div>
-      <Toaster
-        richColors
-        expand
-        position="bottom-right"
-        className="hidden"
-      ></Toaster>
+      <Toaster richColors expand position="bottom-right"></Toaster>
     </div>
   );
 };
