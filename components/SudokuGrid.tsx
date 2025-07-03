@@ -356,7 +356,7 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
           const tl = gsap.timeline({
             onComplete: () => {
               gsap.set(waveCells, { clearProps: "all" });
-              gsap.delayedCall(5, () => {
+              gsap.delayedCall(2, () => {
                 setIsComplete(true);
               });
             },
