@@ -475,8 +475,6 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
             setScore((prev: number) => prev + 480);
           }
 
-          setGlobalPuzzleGrid(newGrid);
-
           if (isPuzzleDone) {
             animateEntireGrid(ri, ci);
           } else {
