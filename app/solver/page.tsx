@@ -122,7 +122,7 @@ const Solver = () => {
   };
 
   return (
-    <div className="w-full h-screen grid place-items-center">
+    <div className="w-full h-screen grid place-items-center [&>section]:hidden">
       <div className={"solverPage opacity-0"}>
         <h1 className="flex flex-row content-center mb-5.5 h-10 w-189 font-sans bg-secondary rounded text-[1.05rem]">
           <Image
