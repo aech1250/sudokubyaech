@@ -84,6 +84,8 @@ const SudokuGrid: React.FC<SudokuGridProps> = ({
   useEffect(() => {
     if (!settings.lighteningMode) {
       setNumberToEnter(null);
+    } else if (!settings.lighteningMode && level === "None") {
+      setNumberToEnter(null);
     } else {
       if (numberToEnter === null) {
         for (let i = 1; i < 10; i++) {
