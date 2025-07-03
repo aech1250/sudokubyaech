@@ -80,6 +80,7 @@ export default function Home() {
 
   useEffect(() => {
     if (mistakes === 3) {
+      setMistakes(0);
       setIsComplete(true);
       setIsLose(true);
     }
