@@ -22,6 +22,7 @@ type PlayGameProps = {
   setTimeObj: Dispatch<SetStateAction<TimeOjb>>;
   setHints: Dispatch<SetStateAction<Hints>>;
   setMistakes: Dispatch<SetStateAction<Mistakes>>;
+  setIsLose: Dispatch<SetStateAction<boolean>>;
 };
 
 const PlayGame = ({
@@ -36,6 +37,7 @@ const PlayGame = ({
   setTimeObj,
   setHints,
   setMistakes,
+  setIsLose,
 }: PlayGameProps) => {
   const handleMenuItemClick = (level: Level) => {
     setLevel(level);
@@ -46,6 +48,7 @@ const PlayGame = ({
     setTime(0);
     setHints(3);
     setMistakes(0);
+    setIsLose(false);
     setTimeObj({ hour: 0, minute: 0, second: 0 });
     const tl = gsap.timeline();
     tl.fromTo(

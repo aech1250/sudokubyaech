@@ -155,6 +155,7 @@ export default function Home() {
                   setTimeObj={setTimeObj}
                   setHints={setHints}
                   setMistakes={setMistakes}
+                  setIsLose={setIsLose}
                 />
               </div>
             </div>
@@ -215,6 +216,7 @@ export default function Home() {
                 setTimeObj={setTimeObj}
                 setHints={setHints}
                 setMistakes={setMistakes}
+                setIsLose={setIsLose}
               />
             </div>
           </div>
