@@ -86,7 +86,7 @@ export default function Home() {
   }, [mistakes]);
 
   return (
-    <div className="w-full h-screen grid place-items-center">
+    <div className="classicPage opacity-0 w-full h-screen grid place-items-center">
       <div>
         <h1 className="mb-5 pl-41.5 font-sans text-[1.45rem]">
           {isComplete ? (

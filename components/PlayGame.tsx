@@ -3,6 +3,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Button } from "./ui/button";
 import { PopoverArrow } from "@radix-ui/react-popover";
 import Image from "next/image";
+import gsap from "gsap";
 
 type Level = "Expert" | "Hard" | "Medium" | "Easy" | "None";
 type TimeOjb = { hour: number; minute: number; second: number };
@@ -46,6 +47,60 @@ const PlayGame = ({
     setHints(3);
     setMistakes(0);
     setTimeObj({ hour: 0, minute: 0, second: 0 });
+    const tl = gsap.timeline();
+    tl.fromTo(
+      ".classicGrid",
+      { opacity: 0, scale: 0 },
+      { opacity: 1, scale: 1, duration: 1, ease: "power1.inOut" }
+    );
+    tl.fromTo(
+      ".classicHints",
+      { x: 1, y: -157.5, opacity: 0, scale: 0 },
+      {
+        x: 1,
+        y: 1,
+        opacity: 1,
+        scale: 1,
+        duration: 0.3,
+        ease: "power1.inOut",
+      }
+    );
+    tl.fromTo(
+      ".classicErase",
+      { x: 1, y: -78, opacity: 0, scale: 0 },
+      {
+        x: 1,
+        y: 1,
+        opacity: 1,
+        scale: 1,
+        duration: 0.3,
+        ease: "power1.inOut",
+      }
+    );
+    tl.fromTo(
+      ".classicUndo",
+      { x: 1, y: 1, opacity: 0, scale: 0 },
+      {
+        x: 1,
+        y: 1,
+        opacity: 1,
+        scale: 1,
+        duration: 0.3,
+        ease: "power1.inOut",
+      }
+    );
+    tl.fromTo(
+      ".classicNumberBar",
+      { x: 1, y: 1, opacity: 0, scale: 0 },
+      {
+        x: 1,
+        y: 1,
+        opacity: 1,
+        scale: 1,
+        duration: 0.3,
+        ease: "power1.inOut",
+      }
+    );
   };
 
   return (

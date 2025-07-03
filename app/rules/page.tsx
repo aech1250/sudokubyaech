@@ -2,7 +2,7 @@ import React from "react";
 
 const rules = () => {
   return (
-    <div className="w-full mt-31.5 pl-10.5 pr-10.5">
+    <div className="rulesPage w-full mt-31.5 pl-10.5 pr-10.5">
       <h1 className="font-sans font-bold mb-4 text-4xl">
         Basic Rules of Sudoku
       </h1>

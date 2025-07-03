@@ -124,7 +124,7 @@ const Solver = () => {
   return (
     <div className="w-full h-screen">
       <Toaster richColors expand position="bottom-right"></Toaster>
-      <div className={"ml-37.75 pt-11.75"}>
+      <div className={"solverPage opacity-0 ml-37.75 pt-11.75"}>
         <h1 className="flex flex-row content-center mb-5.5 h-10 w-189 font-sans bg-secondary rounded text-[1.05rem]">
           <Image
             src={"/info-light.svg"}

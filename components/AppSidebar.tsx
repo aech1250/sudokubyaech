@@ -22,6 +22,8 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import React, { useState } from "react";
 import { Settings, useSettings } from "@/app/contexts/settings";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
 
 const navItems = [
   { name: "Classic", icon: "gamepad", href: "/" },
@@ -35,6 +37,30 @@ const AppSidebar = () => {
   const [settingHovered, setSettingHovered] = useState<boolean>(false);
   const [openSettings, setOpenSettings] = useState<boolean>(false);
   const { settings, setSettings } = useSettings();
+
+  useGSAP(() => {
+    if (pathname === "/") {
+      gsap.fromTo(
+        ".classicPage",
+        { opacity: 0 },
+        { opacity: 1, duration: 1, ease: "power1.inOut" }
+      );
+    }
+    if (pathname === "/rules") {
+      gsap.fromTo(
+        ".rulesPage",
+        { opacity: 0 },
+        { opacity: 1, duration: 1, ease: "power1.inOut" }
+      );
+    }
+    if (pathname === "/solver") {
+      gsap.fromTo(
+        ".solverPage",
+        { opacity: 0 },
+        { opacity: 1, duration: 1, ease: "power1.inOut" }
+      );
+    }
+  }, [pathname]);
 
   return (
     <Sidebar
